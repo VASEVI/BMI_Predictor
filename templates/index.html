@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💪 BMI Predictor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Add custom animation keyframes */
+    @keyframes slideInLeft {
+      0% { transform: translateX(-100%); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideInRight {
+      0% { transform: translateX(100%); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    .slide-in-left { animation: slideInLeft 0.7s ease-out forwards; }
+    .slide-in-right { animation: slideInRight 0.7s ease-out forwards; }
+    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-r from-blue-100 to-purple-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="bg-white shadow-2xl rounded-3xl w-full max-w-6xl p-6 flex flex-col md:flex-row gap-6 relative overflow-hidden">
+
+    <!-- Decorative Image -->
+    <div class="absolute top-0 right-0 w-32 opacity-20">
+      <img src="https://cdn-icons-png.flaticon.com/512/2920/2920332.png" alt="Fitness Icon">
+    </div>
+
+    <!-- Form Section -->
+    <div class="flex-1 bg-gray-50 p-6 rounded-xl shadow-inner relative z-10 slide-in-left">
+      <h1 class="text-3xl font-bold text-center text-blue-700 mb-6 animate-bounce">💪 BMI Predictor</h1>
+      <form id="bmiForm" class="space-y-4">
+        <div>
+          <label class="block mb-1 font-medium">Age 🧒</label>
+          <input type="number" name="age" class="w-full border rounded p-2 hover:ring-2 hover:ring-blue-400 transition" placeholder="Enter your age" required>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Gender 👤</label>
+          <select name="gender" class="w-full border rounded p-2 hover:ring-2 hover:ring-blue-400 transition">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Height 📏 (cm)</label>
+          <input type="number" name="height_cm" class="w-full border rounded p-2 hover:ring-2 hover:ring-blue-400 transition" placeholder="Enter height in cm" required>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Weight ⚖️ (kg)</label>
+          <input type="number" name="weight_kg" class="w-full border rounded p-2 hover:ring-2 hover:ring-blue-400 transition" placeholder="Enter weight in kg" required>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Diet 🥗</label>
+          <select name="diet" class="w-full border rounded p-2 hover:ring-2 hover:ring-blue-400 transition">
+            <option value="Non-Veg">Non-Veg</option>
+            <option value="Veg">Veg</option>
+            <option value="Vegan">Vegan</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Exercise 🏃‍♂️ minutes/week</label>
+          <input type="number" name="exercise_min_per_week" class="w-full border rounded p-2 hover:ring-2 hover:ring-blue-400 transition" placeholder="e.g., 150" required>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Smoking 🚬</label>
+          <select name="smoking" class="w-full border rounded p-2 hover:ring-2 hover:ring-blue-400 transition">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Drinking 🍷</label>
+          <select name="drinking" class="w-full border rounded p-2 hover:ring-2 hover:ring-blue-400 transition">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-xl font-semibold hover:from-purple-600 hover:to-blue-600 transition transform hover:scale-105">Predict BMI 🩺</button>
+      </form>
+    </div>
+
+    <!-- Result Section -->
+    <div id="result" class="flex-1 bg-gradient-to-tr from-blue-50 to-purple-50 p-6 rounded-xl shadow-inner hidden relative z-10 slide-in-right">
+      <h2 class="text-2xl font-bold text-center text-purple-700 mb-4 animate-pulse">📊 Your BMI Result</h2>
+      <div class="space-y-3">
+        <!-- Results will appear here -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('bmiForm');
+    const resultDiv = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const resData = await response.json();
+      const resultContent = resultDiv.querySelector('div');
+
+      if (resData.error) {
+        resultDiv.classList.remove('hidden');
+        resultContent.innerHTML = `<p class="text-red-600 font-semibold animate-pulse">❌ ${resData.error}</p>`;
+      } else {
+        resultDiv.classList.remove('hidden');
+
+        let categoryEmoji = "✅";
+        let categoryColor = "text-green-600";
+        if (resData.prediction === "Overweight") { categoryEmoji = "⚠️"; categoryColor = "text-yellow-600"; }
+        if (resData.prediction === "Obese") { categoryEmoji = "❌"; categoryColor = "text-red-600"; }
+
+        resultContent.innerHTML = `
+          <p class="animate-fade-in"><strong>BMI:</strong> ${resData.bmi} ${categoryEmoji}</p>
+          <p class="animate-fade-in"><strong>Category:</strong> <span class="${categoryColor} font-bold">${resData.prediction}</span></p>
+          <p class="animate-fade-in"><strong>Advice:</strong> ${resData.recommendations.advice}</p>
+          <p class="animate-fade-in"><strong>Diet:</strong> ${resData.recommendations.diet}</p>
+          <p class="animate-fade-in"><strong>Exercise:</strong> ${resData.recommendations.exercise}</p>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
